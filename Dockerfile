@@ -1,19 +1,30 @@
-# this is my base image
-FROM alpine:3.5
+#
+# Nginx Dockerfile
+#
+# https://github.com/dockerfile/nginx
+#
 
-# Install python and pip
-RUN apk add --update py2-pip
+# Pull base image.
+FROM dockerfile/ubuntu
 
-# install Python modules needed by the Python app
-COPY requirements.txt /usr/src/app/
-RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt
+# Install Nginx.
+RUN \
+  add-apt-repository -y ppa:nginx/stable && \
+  apt-get update && \
+  apt-get install -y nginx && \
+  rm -rf /var/lib/apt/lists/* && \
+  echo "\ndaemon off;" >> /etc/nginx/nginx.conf && \
+  chown -R www-data:www-data /var/lib/nginx
 
-# copy files required for the app to run
-COPY app.py /usr/src/app/
-COPY templates/index.html /usr/src/app/templates/
+# Define mountable directories.
+VOLUME ["/etc/nginx/sites-enabled", "/etc/nginx/certs", "/etc/nginx/conf.d", "/var/log/nginx", "/var/www/html"]
 
-# tell the port number the container should expose
-EXPOSE 5000
+# Define working directory.
+WORKDIR /etc/nginx
 
-# run the application
-CMD ["python", "/usr/src/app/app.py"]
+# Define default command.
+CMD ["nginx"]
+
+# Expose ports.
+EXPOSE 80
+EXPOSE 443
